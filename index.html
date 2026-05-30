@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>דירה בהנחה — סיכום לפי עיר</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #07111f;
+      --surface:   #0f1e30;
+      --surface2:  #162536;
+      --border:    #1e3a5a;
+      --text:      #e8f0fe;
+      --muted:     #5a7a9a;
+      --accent:    #3b82f6;
+      --accent2:   #93c5fd;
+    }
+
+    body {
+      font-family: 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      direction: rtl;
+      user-select: none;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    .header {
+      background: linear-gradient(135deg, #0a1e3a 0%, #0f3460 100%);
+      padding: 22px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .header h1 { font-size: 1.45rem; font-weight: 700; color: #fff; }
+    .header p  { color: #7eb3d8; font-size: 0.83rem; margin-top: 5px; }
+
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 9px 22px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.87rem;
+      font-weight: 600;
+      transition: background 0.18s, opacity 0.18s;
+      white-space: nowrap;
+    }
+    .btn:hover    { background: #2563eb; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── Stats bar ───────────────────────────────────────── */
+    .stats {
+      display: flex;
+      gap: 12px;
+      padding: 18px 40px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .stat {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 20px;
+      min-width: 130px;
+    }
+    .stat .val {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--accent2);
+      line-height: 1.1;
+    }
+    .stat .lbl {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 5px;
+      letter-spacing: 0.02em;
+    }
+    .stat .lbl-sub {
+      font-size: 0.65rem;
+      color: var(--muted);
+      opacity: 0.65;
+      margin-top: 2px;
+    }
+
+    /* ── Main ────────────────────────────────────────────── */
+    .main { padding: 28px 40px; }
+
+    .section-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      margin-bottom: 14px;
+    }
+
+    /* ── Table ───────────────────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead {
+      background: var(--surface2);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    thead th {
+      padding: 11px 16px;
+      text-align: right;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      white-space: nowrap;
+      border-bottom: 2px solid var(--border);
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    thead th:hover  { color: var(--text); }
+    thead th.sorted { color: var(--accent2); }
+    thead th.no-sort { cursor: default; }
+    .sort-arrow { margin-right: 3px; font-style: normal; }
+
+    tbody tr {
+      border-bottom: 1px solid #0d1a29;
+      transition: background 0.1s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:nth-child(even) { background: rgba(255,255,255,0.018); }
+    tbody tr:hover { background: #0f2240 !important; }
+
+    td { padding: 11px 16px; vertical-align: middle; }
+
+    /* Rank + medal badges */
+    .td-rank { width: 44px; text-align: center; vertical-align: middle; }
+    .medal {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%;
+      font-size: 0.77rem; font-weight: 800; line-height: 1;
+    }
+    .medal-gold   { background: linear-gradient(135deg, #fbbf24, #d97706); color: #1a0800; box-shadow: 0 0 12px rgba(251,191,36,.35); }
+    .medal-silver { background: linear-gradient(135deg, #e2e8f0, #94a3b8); color: #0f172a; }
+    .medal-bronze { background: linear-gradient(135deg, #d97706, #92400e); color: #fff8f0; }
+    .rank-num     { color: var(--muted); font-size: 0.82rem; font-weight: 500; }
+
+    /* City */
+    .city-row-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      direction: rtl;          /* explicit RTL so flex flows right→left */
+    }
+    .city-row-inner > div { min-width: 0; flex: 1; }   /* prevent long names from overflowing */
+    .city-name  { font-weight: 600; font-size: 0.95rem; }
+    .proj-count { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+
+    /* Units bar */
+    .units-cell { min-width: 210px; }
+    .units-row  { display: flex; align-items: center; gap: 10px; }
+    .units-num  {
+      font-weight: 700;
+      color: var(--accent2);
+      min-width: 48px;
+      font-size: 1rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .units-sub {
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-weight: 400;
+      font-variant-numeric: tabular-nums;
+      margin-top: 1px;
+    }
+    .bar-track {
+      flex: 1;
+      max-width: 150px;
+      height: 7px;
+      background: #1a2e45;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      overflow: hidden;
+    }
+    .bar-seg-p { background: #f59e0b; height: 100%; min-width: 0; transition: width 0.4s ease; }  /* profile-dedicated — amber */
+    .bar-seg-o { background: linear-gradient(90deg, #1d4ed8, #3b82f6); height: 100%; min-width: 0; transition: width 0.4s ease; }  /* general pool — blue */
+
+    /* Subscribers */
+    .subs-num {
+      font-variant-numeric: tabular-nums;
+      font-size: 0.93rem;
+    }
+
+    /* Competition badge */
+    .comp-cell { white-space: nowrap; min-width: 130px; }
+    .badge {
+      display: inline-block;
+      padding: 3px 11px;
+      border-radius: 99px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .badge-easy  { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+    .badge-med   { background: #451a03; color: #fbbf24; border: 1px solid #92400e; }
+    .badge-hard  { background: #450a0a; color: #f87171; border: 1px solid #991b1b; }
+    .badge-vhard { background: #2e1065; color: #c4b5fd; border: 1px solid #6d28d9; }
+
+    .ratio-text { color: var(--muted); font-size: 0.75rem; margin-top: 3px; }
+
+    /* Permit risk */
+    .permit-cell { min-width: 150px; }
+    .badge-permit-none { background: #450a0a; color: #f87171; border: 1px solid #991b1b; }
+    .badge-permit-cond { background: #451a03; color: #fbbf24; border: 1px solid #92400e; }
+    .badge-permit-full { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+    .permit-sub { color: var(--muted); font-size: 0.73rem; margin-top: 3px; }
+
+    /* Price */
+    .price-cell { min-width: 110px; white-space: nowrap; }
+    .price-val  { font-weight: 700; font-size: 0.95rem; }
+    .price-cheap { color: #4ade80; }
+    .price-mid   { color: #fbbf24; }
+    .price-exp   { color: #f87171; }
+    .price-sub  { color: var(--muted); font-size: 0.73rem; margin-top: 3px; }
+
+    /* ── Loading / Error ─────────────────────────────────── */
+    .loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 72px 24px;
+      color: var(--muted);
+      gap: 14px;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .ts {
+      color: var(--muted);
+      font-size: 0.73rem;
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    /* ── Profile selector ────────────────────────────────── */
+    .profile-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 13px 40px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .profile-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; white-space: nowrap; }
+    .profile-tabs  { display: flex; gap: 6px; flex-wrap: wrap; }
+    .profile-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 16px;
+      border-radius: 99px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .profile-btn:hover  { border-color: var(--accent); color: var(--accent2); }
+    .profile-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+
+    /* ── Delivery date ───────────────────────────────────── */
+    .delivery-cell { min-width: 110px; white-space: nowrap; }
+    .delivery-val  { font-weight: 600; font-size: 0.88rem; }
+    .delivery-soon { color: #4ade80; }
+    .delivery-mid  { color: #fbbf24; }
+    .delivery-late { color: #f87171; }
+    .delivery-none { color: var(--muted); font-style: italic; font-size: 0.83rem; }
+    .delivery-sub  { color: var(--muted); font-size: 0.73rem; margin-top: 2px; }
+
+    /* ── Overall score ───────────────────────────────────── */
+    .score-cell      { min-width: 80px; text-align: center; }
+    .score-num       { font-size: 1.55rem; font-weight: 800; line-height: 1; }
+    .score-bar-track { height: 4px; background: #1a2e45; border-radius: 2px; margin-top: 6px; overflow: hidden; }
+    .score-bar-fill  { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+    .score-high { color: #4ade80; }
+    .score-mid  { color: #fbbf24; }
+    .score-low  { color: #f87171; }
+
+    /* reserved-units badge (combat / reservist profiles) */
+    .badge-reserved { background: #2e1065; color: #c4b5fd; border: 1px solid #6d28d9; }
+
+    /* ── Help button ─────────────────────────────────────── */
+    .section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .section-header .section-label { margin-bottom: 0; flex: 1; }
+    .help-btn {
+      flex-shrink: 0;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .help-btn:hover { border-color: var(--accent); color: var(--accent2); background: #0f2240; }
+
+    /* ── Modal ───────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; animation: fadein 0.15s ease; }
+    @keyframes fadein { from { opacity:0 } to { opacity:1 } }
+
+    .modal-card {
+      background: #0d1c2e;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px 24px;
+      max-width: 620px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 14px; left: 16px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); background: var(--surface2); }
+    .modal-card h2 { font-size: 1.05rem; color: #fff; margin-bottom: 20px; padding-left: 32px; }
+    .modal-section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--accent2);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      margin: 22px 0 10px;
+    }
+    .modal-section-title:first-of-type { margin-top: 0; }
+
+    /* Score formula rows */
+    .formula-rows { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .formula-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .formula-row:last-child { border-bottom: none; }
+    .fw {
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 99px;
+      min-width: 36px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .fw-big { background: #1d4ed8; font-size: 0.85rem; padding: 3px 11px; }
+    .ff { font-size: 0.88rem; color: var(--text); flex: 1; }
+    .fd { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+
+    /* Profile rows */
+    .profile-rows { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .profile-explain-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .profile-explain-row:last-child { border-bottom: none; }
+    .ptag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 99px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .ptag-gen  { background: #1e3a8a; color: #93c5fd; }
+    .ptag-loc  { background: #4a1d96; color: #c4b5fd; }
+    .ptag-com  { background: #7f1d1d; color: #fca5a5; }
+    .ptag-res  { background: #78350f; color: #fcd34d; }
+    .ptag-han  { background: #064e3b; color: #6ee7b7; }
+    .pcalc { font-size: 0.82rem; color: var(--text); line-height: 1.55; }
+    .pcalc code { color: var(--accent2); font-family: monospace; font-size: 0.8rem; background: #0a1830; padding: 1px 5px; border-radius: 4px; }
+    .pcalc .warn { color: #fbbf24; font-size: 0.75rem; display: block; margin-top: 2px; }
+
+    /* Note box */
+    .modal-note {
+      margin-top: 18px;
+      background: #0a1830;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .modal-note strong { color: #94a3b8; }
+
+    /* ── Column header icons ─────────────────────────────── */
+    .th-icon { display: inline-block; vertical-align: -3px; margin-right: 5px; opacity: 0.55; transition: opacity 0.15s; }
+    .th-icon svg { width: 13px; height: 13px; }
+    thead th:hover .th-icon,
+    thead th.sorted .th-icon { opacity: 1; }
+    thead th.sorted .th-icon svg { stroke: var(--accent2); }
+
+    /* ── Profile-button icons ────────────────────────────── */
+    .pi { width: 13px; height: 13px; vertical-align: -3px; margin-right: 6px; }
+    .profile-btn.active .pi { stroke: #fff; }
+
+    /* ── Section header (override + improve) ─────────────── */
+    .section-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 20px;
+      padding-right: 14px;
+      border-right: 3px solid var(--accent);
+    }
+    .section-header .section-label {
+      margin-bottom: 0; flex: 1;
+      font-size: 0.82rem; color: #7eb3d8;
+      font-weight: 500; letter-spacing: 0.03em;
+      text-transform: none;
+    }
+
+    /* ── Table wrap shadow ───────────────────────────────── */
+    .table-wrap { box-shadow: 0 4px 28px rgba(0,0,0,.35), 0 1px 4px rgba(0,0,0,.2); }
+
+    /* ── Stats card accent + bg icon ─────────────────────── */
+    .stat {
+      border-top: 2px solid var(--border);
+      overflow: hidden;
+      cursor: default;
+      transition: transform 0.22s cubic-bezier(.22,1,.36,1),
+                  box-shadow 0.22s ease,
+                  border-color 0.22s ease,
+                  background  0.22s ease;
+    }
+    .stat:hover { transform: translateY(-5px) scale(1.04); background: #0e1e35; }
+    .stat:hover .val { text-shadow: 0 0 18px currentColor; }
+
+    /* Per-card glow colours: blue · purple · green · amber */
+    #stats .stat:nth-child(1):hover { border-color:#3b82f6; box-shadow:0 6px 28px rgba(59,130,246,.4), 0 0 0 1px #3b82f6; }
+    #stats .stat:nth-child(2):hover { border-color:#8b5cf6; box-shadow:0 6px 28px rgba(139,92,246,.4), 0 0 0 1px #8b5cf6; }
+    #stats .stat:nth-child(3):hover { border-color:#10b981; box-shadow:0 6px 28px rgba(16,185,129,.4), 0 0 0 1px #10b981; }
+    #stats .stat:nth-child(4):hover { border-color:#f59e0b; box-shadow:0 6px 28px rgba(245,158,11, .4), 0 0 0 1px #f59e0b; }
+
+    #stats .stat:nth-child(1):hover .val { color:#93c5fd; }
+    #stats .stat:nth-child(2):hover .val { color:#c4b5fd; }
+    #stats .stat:nth-child(3):hover .val { color:#6ee7b7; }
+    #stats .stat:nth-child(4):hover .val { color:#fcd34d; }
+    #stats .stat:nth-child(5):hover .val { color:#f9a8d4; }
+    #stats .stat:nth-child(6):hover .val { color:#fde68a; }
+    #stats .stat:nth-child(7):hover .val { color:#fca5a5; }
+
+    #stats .stat:nth-child(5):hover { border-color:#ec4899; box-shadow:0 6px 28px rgba(236,72,153,.4), 0 0 0 1px #ec4899; }
+    #stats .stat:nth-child(6):hover { border-color:#d97706; box-shadow:0 6px 28px rgba(217,119, 6,.4), 0 0 0 1px #d97706; }
+    #stats .stat:nth-child(7):hover { border-color:#ef4444; box-shadow:0 6px 28px rgba(239,68, 68,.4), 0 0 0 1px #ef4444; }
+
+    .stat-bg { position: absolute; bottom: -4px; left: 10px; opacity: 0.07; color: var(--accent2); pointer-events: none; }
+    .stat-bg svg { width: 36px; height: 36px; }
+
+    /* ── Page title icon ─────────────────────────────────── */
+    .h1-icon { width: 22px; height: 22px; vertical-align: -4px; margin-right: 10px; color: #93c5fd; flex-shrink: 0; }
+
+    /* ── Tbody row animation ─────────────────────────────── */
+    tbody tr { transition: background 0.12s, transform 0.12s; }
+
+    /* ── Numeric column alignment ────────────────────────── */
+    td.subs-num, td.units-cell, td.price-cell, td.score-cell, td.delivery-cell { font-variant-numeric: tabular-nums; }
+
+    /* ── City comparison ─────────────────────────────────── */
+    .select-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 2px solid var(--border); background: none;
+      color: var(--muted); font-size: 0.8rem; font-weight: 800;
+      cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+    }
+    .select-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .select-btn.selected { border-color: var(--accent); background: var(--accent); color: #fff; }
+    .select-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+    .city-row.city-selected { box-shadow: inset -3px 0 0 var(--accent); background: rgba(59,130,246,.05) !important; }
+
+    .compare-btn {
+      display: none; align-items: center; gap: 6px;
+      background: var(--accent); color: #fff; border: none;
+      padding: 6px 14px; border-radius: 8px; cursor: pointer;
+      font-size: 0.82rem; font-weight: 700; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .compare-btn.visible { display: inline-flex; }
+    .compare-btn:hover { background: #2563eb; }
+
+    /* ── Modal dark scrollbar ────────────────────────────── */
+    .modal-card { scrollbar-width: thin; scrollbar-color: #1e3a5a transparent; }
+    .modal-card::-webkit-scrollbar       { width: 5px; }
+    .modal-card::-webkit-scrollbar-track { background: transparent; }
+    .modal-card::-webkit-scrollbar-thumb { background: #1e3a5a; border-radius: 3px; }
+    .modal-card::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* ── Win probability modal ───────────────────────────── */
+    #compareModal .modal-card { max-width: 1100px; width: 92vw; padding: 32px 36px 28px; }
+
+    /* Compact eligibility strip */
+    .elig-section {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+      background: #070f1c; border: 1px solid var(--border);
+      border-radius: 10px; padding: 11px 16px; margin-bottom: 16px;
+    }
+    .elig-title { font-size: 0.75rem; font-weight: 700; color: var(--accent2); white-space: nowrap; flex-shrink: 0; }
+    .elig-pills { display: flex; flex-wrap: wrap; gap: 7px; flex: 1; }
+    .elig-pill  {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 99px;
+      border: 1px solid var(--border); background: var(--bg);
+      cursor: pointer; font-size: 0.78rem; color: var(--muted);
+      transition: all 0.15s; user-select: none;
+    }
+    .elig-pill:has(input:checked) { background: rgba(59,130,246,.14); border-color: var(--accent); color: var(--accent2); }
+    .elig-pill input { width: 12px; height: 12px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+    .elig-always {
+      font-size: 0.75rem; color: var(--muted); padding: 5px 12px;
+      border-radius: 99px; background: var(--bg);
+      border: 1px dashed #1e3a5a; white-space: nowrap; opacity: 0.6;
+    }
+
+    /* Cities in a horizontal row */
+    .win-cities-row { display: flex; gap: 12px; margin-bottom: 12px; }
+    .win-city-block {
+      flex: 1; min-width: 0;
+      background: #070f1c; border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 22px;
+    }
+    .win-city-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+    .win-city-name   { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .win-city-count  { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+    .win-pct         { font-size: 2rem; font-weight: 800; line-height: 1; flex-shrink: 0; }
+    .win-bar-track   { height: 8px; background: #1a2e45; border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
+    .win-bar-fill    { height: 100%; border-radius: 3px; transition: width 0.55s cubic-bezier(.22,1,.36,1); }
+    .win-proj-list   { display: flex; flex-wrap: wrap; gap: 4px; }
+    .win-proj-chip   {
+      font-size: 0.68rem; color: var(--muted);
+      background: #0f1e30; border: 1px solid #1a2e45;
+      padding: 2px 7px; border-radius: 4px;
+      line-height: 1.6;
+    }
+
+    /* Combined probability — full-width bottom bar */
+    .win-combined-card {
+      display: flex; align-items: center; gap: 16px;
+      background: linear-gradient(135deg, #0a1830 0%, #0f2040 100%);
+      border: 1px solid var(--accent);
+      border-radius: 10px; padding: 14px 20px;
+    }
+    .win-combined-label { font-size: 0.75rem; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+    .win-combined-pct   { font-size: 2.6rem; font-weight: 800; line-height: 1; flex-shrink: 0; }
+    .win-combined-bar   { flex: 1; height: 8px; background: #1a2e45; border-radius: 4px; overflow: hidden; }
+
+    /* Proxy warning + formula note */
+    .win-proxy-warn { font-size: 0.73rem; color: #fbbf24; margin-bottom: 12px; padding: 7px 12px; background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.2); border-radius: 7px; line-height: 1.5; }
+    .win-formula    { margin-top: 12px; font-size: 0.73rem; color: var(--muted); line-height: 1.65; padding: 9px 13px; background: #070f1c; border-radius: 8px; border: 1px solid var(--border); }
+
+    /* ── Entry animations ────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes rowIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes barGrow {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.6; }
+    }
+
+    .header      { animation: fadeUp 0.45s cubic-bezier(.22,1,.36,1) both; }
+    .stats       { animation: fadeUp 0.45s 0.07s cubic-bezier(.22,1,.36,1) both; }
+    .profile-bar { animation: fadeUp 0.45s 0.14s cubic-bezier(.22,1,.36,1) both; }
+    .main        { animation: fadeIn 0.4s 0.18s ease both; }
+
+    .bar-fill {
+      transform-origin: right center;
+      animation: barGrow 0.65s cubic-bezier(.22,1,.36,1) both;
+    }
+    .score-bar-fill {
+      transform-origin: right center;
+      animation: barGrow 0.65s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    /* Row hover: subtle right nudge */
+    tbody tr { transition: background 0.12s, transform 0.15s; }
+    tbody tr:hover { transform: translateX(3px); }
+
+    /* Spinner pulse */
+    .loader .spinner { animation: spin 0.7s linear infinite; }
+
+    /* ── Expandable city rows ────────────────────────────── */
+    .city-row { cursor: pointer; }
+    tbody tr.detail-row:hover { background: transparent !important; transform: none !important; }
+
+    .chevron {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 20px; height: 20px;
+      color: var(--muted);
+      transition: transform 0.22s ease, color 0.15s;
+      font-style: normal;
+    }
+    .city-row:hover .chevron { color: var(--accent2); }
+    .detail-row.open + * .chevron,            /* fallback */
+    .chevron.open { transform: rotate(180deg); }
+
+    .detail-row > td { padding: 0 !important; border-bottom: none !important; }
+    .city-detail {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.28s cubic-bezier(.22,1,.36,1);
+    }
+    .detail-row.open .city-detail { grid-template-rows: 1fr; }
+    .detail-inner {
+      overflow: hidden;
+      background: #060f1d;
+      border-bottom: 2px solid var(--border);
+    }
+
+    /* Mini project table inside expanded row */
+    .project-list { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .project-list thead th {
+      padding: 8px 16px;
+      background: #090f1c;
+      color: var(--muted);
+      font-size: 0.69rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border);
+      cursor: default;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .project-list thead th:hover { color: var(--muted); }
+    .project-list tbody td {
+      padding: 9px 16px;
+      border-bottom: 1px solid #0a1525;
+      vertical-align: middle;
+    }
+    .project-list tbody tr:last-child td { border-bottom: none; }
+    .project-list tbody tr:hover { background: #0c1e35 !important; transform: none; }
+    .lottery-link {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .lottery-link:hover { background: #2563eb; }
+    .pd-hood { font-weight: 600; font-size: 0.88rem; }
+    .pd-contractor { color: var(--muted); font-size: 0.78rem; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pd-units  { color: var(--accent2); font-weight: 700; }
+    .pd-ratio  { color: var(--muted); font-size: 0.8rem; }
+    .pd-age    { color: var(--muted); font-size: 0.78rem; }
+    .relig-tag {
+      display: inline-block; padding: 1px 6px; border-radius: 4px;
+      font-size: 0.68rem; font-weight: 700;
+      background: #1e3a5a; color: #7eb3d8;
+      margin-right: 5px; vertical-align: 1px;
+    }
+
+    /* Religious filter separator */
+    .filter-sep {
+      width: 1px; height: 22px;
+      background: var(--border);
+      margin: 0 8px; flex-shrink: 0; align-self: center;
+    }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 680px) {
+      .header, .stats, .profile-bar, .main { padding-right: 16px; padding-left: 16px; }
+      .stat { min-width: 110px; }
+      .units-cell { min-width: 150px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div>
+    <h1><svg class="h1-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V7l9-4 9 4v14"/><path d="M3 21h18"/><path d="M9 21v-6h6v6"/><path d="M9 10h2M13 10h2M9 14h2M13 14h2"/></svg>דירה בהנחה — סיכום הגרלות לפי עיר</h1>
+    <p id="subtitle">טוען נתונים...</p>
+  </div>
+  <button class="btn" id="refreshBtn" onclick="loadData(true)">&#8635; רענן נתונים</button>
+</div>
+
+<!-- Stats -->
+<div class="stats" id="stats">
+  <div class="stat"><div class="val">—</div><div class="lbl">ערים פתוחות</div></div>
+  <div class="stat"><div class="val">—</div><div class="lbl">יחידות דיור</div></div>
+  <div class="stat"><div class="val">—</div><div class="lbl">הגרלות פתוחות</div></div>
+  <div class="stat"><div class="val">—</div><div class="lbl">ממוצע יח"ד לעיר</div></div>
+</div>
+
+<!-- Profile selector -->
+<div class="profile-bar">
+  <span class="profile-label">הפרופיל שלי:</span>
+  <div class="profile-tabs">
+    <button class="profile-btn active" data-profile="homeless"    onclick="setProfile('homeless')"><svg class="pi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>חסר דיור</button>
+    <button class="profile-btn"        data-profile="local"       onclick="setProfile('local')"><svg class="pi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>בן מקום</button>
+    <button class="profile-btn"        data-profile="combat"      onclick="setProfile('combat')"><svg class="pi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>לוחם מילואים</button>
+    <button class="profile-btn"        data-profile="reservist"   onclick="setProfile('reservist')"><svg class="pi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>מילואים</button>
+    <button class="profile-btn"        data-profile="handicapped" onclick="setProfile('handicapped')"><svg class="pi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><path d="M9 9h6l-1 5h-4z"/><path d="M8 22l2-5M16 22l-2-5"/></svg>נכה</button>
+  </div>
+  <div class="filter-sep"></div>
+  <span class="profile-label">קהילה:</span>
+  <div class="profile-tabs">
+    <button class="profile-btn active" data-relig="all" onclick="setReligious(null)">הכול</button>
+    <button class="profile-btn"        data-relig="yes" onclick="setReligious(true)">דתי</button>
+    <button class="profile-btn"        data-relig="no"  onclick="setReligious(false)">חילוני</button>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="main">
+  <div class="section-header">
+    <div class="section-label" id="sectionLabel">ערים — מסודר לפי ציון כולל</div>
+    <button class="compare-btn" id="compareBtn" onclick="openCompare()">חשב סיכויים</button>
+    <button class="help-btn" onclick="openHelp()" title="הסבר על חישוב הציון">?</button>
+  </div>
+  <div class="table-wrap">
+    <div id="content">
+      <div class="loader">
+        <div class="spinner"></div>
+        <div>טוען נתונים מאתר משרד הבינוי והשיכון...</div>
+      </div>
+    </div>
+  </div>
+  <div class="ts" id="ts"></div>
+</div>
+
+<!-- Compare / win-probability modal -->
+<div class="modal-overlay" id="compareModal" onclick="closeCompareOutside(event)">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeCompare()">✕</button>
+    <h2>סיכויי זכייה — ניתוח</h2>
+    <div id="compareContent"></div>
+  </div>
+</div>
+
+<!-- Help modal -->
+<div class="modal-overlay" id="helpModal" onclick="closeHelpOutside(event)">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeHelp()">✕</button>
+    <h2>כיצד מחושב הציון?</h2>
+
+    <div class="modal-section-title">נוסחת הציון (0–100)</div>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:10px">
+      כל גורם מנורמל לטווח 0–1 לפי הערכים של כלל הערים, ואז מחושב ממוצע משוקלל × 100.
+    </p>
+    <div class="formula-rows">
+      <div class="formula-row">
+        <span class="fw fw-big">50%</span>
+        <span class="ff"><strong>תחרותיות</strong> — כמה מתמודדים ליחידה</span>
+        <span class="fd">פחות = טוב יותר</span>
+      </div>
+      <div class="formula-row">
+        <span class="fw">25%</span>
+        <span class="ff"><strong>מחיר ₪/מ"ר</strong> — ממוצע משוקלל לפי יחידות</span>
+        <span class="fd">זול יותר = טוב יותר</span>
+      </div>
+      <div class="formula-row">
+        <span class="fw">20%</span>
+        <span class="ff"><strong>מועד מסירה</strong> — המוקדם ביותר בעיר</span>
+        <span class="fd">מוקדם = טוב יותר</span>
+      </div>
+      <div class="formula-row">
+        <span class="fw" style="background:#1e3a5a">5%</span>
+        <span class="ff"><strong>סטטוס היתר</strong> — אחוז יחידות עם היתר</span>
+        <span class="fd">יש היתר = טוב יותר</span>
+      </div>
+    </div>
+
+    <div class="modal-section-title">חישוב תחרותיות לפי פרופיל</div>
+    <div class="profile-rows">
+      <div class="profile-explain-row">
+        <span class="ptag ptag-gen">חסר דיור</span>
+        <div class="pcalc">
+          <code>TotalSubscribers</code> ÷ <code>TargetHousingUnits</code><br>
+          סך כל הנרשמים לפרויקט חלקי סך יחידות ההגרלה
+        </div>
+      </div>
+      <div class="profile-explain-row">
+        <span class="ptag ptag-loc">בן מקום</span>
+        <div class="pcalc">
+          <code>TotalLocalSubscribers</code> ÷ <code>LocalHousing</code><br>
+          נרשמים מקומיים חלקי יחידות ייעודיות לבני המקום
+        </div>
+      </div>
+      <div class="profile-explain-row">
+        <span class="ptag ptag-com">לוחם מילואים</span>
+        <div class="pcalc">
+          מוצג: מספר יחידות ייעודיות — <code>HU_CombatReservist_L</code>
+          <span class="warn">⚠ נתוני הרשמה ייעודיים טרם זמינים באתר. לדירוג פנימי, הציון משתמש ביחס: <code>TotalSubscribers ÷ HU_CombatReservist_L</code> כפרוקסי — עיר עם יותר יחידות ייעודיות מקבלת ציון גבוה יותר.</span>
+        </div>
+      </div>
+      <div class="profile-explain-row">
+        <span class="ptag ptag-res">מילואים</span>
+        <div class="pcalc">
+          מוצג: מספר יחידות ייעודיות — <code>HU_Reservists_L</code>
+          <span class="warn">⚠ אותו הסבר כמו לוחם מילואים — נתונים ספציפיים טרם זמינים.</span>
+        </div>
+      </div>
+      <div class="profile-explain-row">
+        <span class="ptag ptag-han">נכה</span>
+        <div class="pcalc">
+          <code>TotalHandicappedSubscribers</code> ÷ <code>HousingUnitsForHandicapped</code><br>
+          נרשמים נכים חלקי יחידות ייעודיות לנכים
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-note">
+      <strong>נורמליזציה:</strong> לכל גורם, הערך הטוב ביותר מקבל 1 והגרוע ביותר מקבל 0 — כך ניתן להשוות גורמים בסקאלות שונות.<br>
+      <strong>מועד מסירה לא ידוע:</strong> מקבל ציון ניטרלי 0.3 (לא מעניש אך גם לא מתגמל).<br>
+      <strong>נתוני תחרות:</strong> כל הנתונים נלקחים ישירות מ-<code>dira.moch.gov.il</code> בזמן אמת.
+    </div>
+  </div>
+</div>
+
+<script>
+  // ─── Constants ────────────────────────────────────────
+  const NOW_MS    = Date.now();
+  const MS_PER_MO = 30.44 * 24 * 3600 * 1000;
+  const NO_PERMIT = 'טרם הוגשה בקשה להיתר';
+  const PROFILE_LABELS = {
+    homeless: 'חסר דיור', local: 'בן מקום',
+    combat: 'לוחם מילואים', reservist: 'מילואים', handicapped: 'נכה',
+  };
+
+  // ─── SVG icon paths (Heroicons-style, 24×24 viewBox) ──
+  const P = {
+    pin:      `<path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>`,
+    grid:     `<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>`,
+    users:    `<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>`,
+    zap:      `<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>`,
+    shield:   `<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>`,
+    price:    `<text x="12" y="18" text-anchor="middle" font-size="19" font-weight="700" font-family="Arial,sans-serif" fill="currentColor" stroke="none">₪</text>`,
+    cal:      `<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>`,
+    award:    `<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>`,
+    layers:   `<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>`,
+    list:     `<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>`,
+    barchart: `<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>`,
+    star:     `<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>`,
+  };
+  // Wrap a path in a th-icon span (size in px, default 13)
+  function ico(key, size = 13) {
+    return `<span class="th-icon"><svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${P[key]}</svg></span>`;
+  }
+
+  let _projects = null;
+  let _profile  = 'homeless';
+  let _sortKey  = 'score';
+  let _sortDir  = 'desc';
+  let _religious = null;   // null = all, true = religious only, false = secular only
+
+  // ─── Lazy drill-down storage ──────────────────────────
+  // Populated by renderRow(); consumed by toggleCity() on first open.
+  const _cityProjects = new Map();
+
+  // ─── Memoization ─────────────────────────────────────
+  // filteredProjects() returns the same reference when _religious hasn't changed,
+  // which lets getComputedData() skip re-aggregation on sort/profile changes.
+  let _fMemo = { key: Symbol(), result: null };
+  function filteredProjects() {
+    if (_fMemo.key === _religious) return _fMemo.result;
+    _fMemo.key = _religious;
+    if (_religious === null)  return (_fMemo.result = _projects);
+    if (_religious === true)  return (_fMemo.result = _projects.filter(p => p.IsReligious === true));
+    return (_fMemo.result = _projects.filter(p => !p.IsReligious));
+  }
+
+  // Computed data cache — avoids re-aggregating on sort changes and
+  // re-scoring on sort changes (only profile changes need re-scoring).
+  let _memo = { projs: null, cities: null, projectsByCity: null, profile: null,
+                totalReservistUnits: 0, totalCombatUnits: 0 };
+
+  function getComputedData() {
+    const projs = filteredProjects();
+
+    if (_memo.projs !== projs) {
+      // Filter changed — rebuild aggregation and project lookup
+      _memo.projs   = projs;
+      _memo.cities  = aggregate(projs);
+      _memo.profile = null;   // force re-score below
+      const pb = {};
+      for (const p of projs) {
+        const k = p.CityDescription || 'לא ידוע';
+        if (!pb[k]) pb[k] = [];
+        pb[k].push(p);
+      }
+      _memo.projectsByCity      = pb;
+      _memo.totalReservistUnits = projs.reduce((s, p) => s + (p.HU_Reservists_L      || 0), 0);
+      _memo.totalCombatUnits    = projs.reduce((s, p) => s + (p.HU_CombatReservist_L || 0), 0);
+    }
+
+    if (_memo.profile !== _profile) {
+      // Profile changed — recompute scores only (aggregation stays the same)
+      const bounds = computeBounds(_memo.cities);
+      _memo.cities.forEach(c => { c._score = calcScore(c, bounds); });
+      _memo.profile = _profile;
+    }
+
+    return _memo;
+  }
+
+  // Call when _projects is replaced (after a live refresh)
+  function invalidateAllCaches() {
+    _fMemo = { key: Symbol(), result: null };
+    _memo  = { projs: null, cities: null, projectsByCity: null, profile: null,
+               totalReservistUnits: 0, totalCombatUnits: 0 };
+  }
+
+  function setReligious(val) {
+    _religious = val;
+    document.querySelectorAll('[data-relig]').forEach(b =>
+      b.classList.toggle('active',
+        (val === null  && b.dataset.relig === 'all') ||
+        (val === true  && b.dataset.relig === 'yes') ||
+        (val === false && b.dataset.relig === 'no')
+      ));
+    if (_projects) render();
+  }
+
+
+  const SORT_LABELS = {
+    score: 'ציון כולל', units: 'יחידות דיור', subs: 'נרשמים',
+    competition: 'תחרותיות', permit: 'היתר בנייה', price: 'מחיר למ"ר',
+    delivery: 'מועד מסירה', name: 'שם עיר',
+  };
+
+  function setSort(key) {
+    _sortDir = _sortKey === key ? (_sortDir === 'desc' ? 'asc' : 'desc')
+                                : (key === 'name' ? 'asc' : 'desc');
+    _sortKey = key;
+    if (_projects) render();
+  }
+
+  function getSortValue(c) {
+    switch (_sortKey) {
+      case 'units':       return c.totalUnits;
+      case 'subs':        return c.maxSubscribers;
+      case 'competition': return getOdds(c, _profile);
+      case 'permit':      return c.totalUnits > 0 ? c.permitUnits / c.totalUnits : 0;
+      case 'price':       return c.totalUnits > 0 ? c.priceSum / c.totalUnits : null;
+      case 'delivery':    return c.earliestDeliveryMs || null;
+      case 'score':       return c._score;
+      default:            return null;
+    }
+  }
+
+  function sortedCities(arr) {
+    return [...arr].sort((a, b) => {
+      if (_sortKey === 'name') {
+        const cmp = a.name.localeCompare(b.name, 'he');
+        return _sortDir === 'asc' ? cmp : -cmp;
+      }
+      let va = getSortValue(a), vb = getSortValue(b);
+      if (va === null && vb === null) return 0;
+      if (va === null) return 1;
+      if (vb === null) return -1;
+      return _sortDir === 'desc' ? vb - va : va - vb;
+    });
+  }
+
+  function thSort(key, content) {
+    const active = _sortKey === key;
+    const arrow  = active ? `<i class="sort-arrow">${_sortDir === 'desc' ? '↓' : '↑'}</i>` : '';
+    return `<th class="${active ? 'sorted' : ''}" onclick="setSort('${key}')">${content}${arrow}</th>`;
+  }
+
+  // ─── Load data ────────────────────────────────────────
+  async function loadData(force = false) {
+    const btn = document.getElementById('refreshBtn');
+    btn.disabled = true;
+    btn.textContent = '⟳ מרענן...';
+    setLoader(force ? 'מרענן נתונים מהאתר... (כ-10 שניות)' : 'טוען נתונים...');
+    try {
+      const res = await fetch(force ? '/api/refresh' : '/api/data', { cache: 'no-store' });
+      if (!res.ok) throw new Error(`שגיאת שרת ${res.status}`);
+      _projects = await res.json();
+      invalidateAllCaches();
+      render();
+    } catch (e) {
+      document.getElementById('content').innerHTML =
+        `<div class="loader" style="color:#f87171">שגיאה: ${e.message}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '↻ רענן נתונים';
+    }
+  }
+
+  function setLoader(msg) {
+    document.getElementById('content').innerHTML =
+      `<div class="loader"><div class="spinner"></div><div>${msg}</div></div>`;
+  }
+
+  // ─── Profile switching ────────────────────────────────
+  function setProfile(p) {
+    _profile = p;
+    document.querySelectorAll('[data-profile]').forEach(b =>
+      b.classList.toggle('active', b.dataset.profile === p));
+    if (_projects) render();
+  }
+
+  // ─── Aggregate by city ────────────────────────────────
+  function aggregate(projects) {
+    const map = {};
+    for (const p of projects) {
+      const key   = p.CityDescription || 'לא ידוע';
+      const units = p.TargetHousingUnits || 0;
+      if (!map[key]) map[key] = {
+        name: key,
+        totalUnits: 0, maxSubscribers: 0, count: 0,
+        permitUnits: 0, priceSum: 0,
+        localUnits: 0, maxLocalSubs: 0,
+        combatUnits: 0, reservistUnits: 0,
+        handicappedUnits: 0, handicappedSubs: 0,
+        earliestDeliveryMs: null,
+      };
+      const c = map[key];
+      c.totalUnits       += units;
+      c.maxSubscribers    = Math.max(c.maxSubscribers, p.TotalSubscribers || 0);
+      c.count++;
+      if (p.PermitStatus && p.PermitStatus !== NO_PERMIT) c.permitUnits += units;
+      if (p.PricePerUnit)  c.priceSum += p.PricePerUnit * units;
+      c.localUnits       += (p.LocalHousing || 0);
+      c.maxLocalSubs      = Math.max(c.maxLocalSubs, p.TotalLocalSubscribers || 0);
+      c.combatUnits      += (p.HU_CombatReservist_L || 0);
+      c.reservistUnits   += (p.HU_Reservists_L || 0);
+      c.handicappedUnits += (p.HousingUnitsForHandicapped || 0);
+      c.handicappedSubs  += (p.TotalHandicappedSubscribers || 0);
+      if (p.LotDeliveryDate) {
+        const ms = new Date(p.LotDeliveryDate).getTime();
+        if (!c.earliestDeliveryMs || ms < c.earliestDeliveryMs) c.earliestDeliveryMs = ms;
+      }
+    }
+    return Object.values(map);
+  }
+
+  // ─── Personalized odds ────────────────────────────────
+  // For combat/reservist, subscriber counts are not live yet.
+  // We use maxSubscribers/dedicatedUnits as a ranking PROXY only —
+  // it correctly orders cities (more dedicated units = lower ratio = higher score)
+  // but is not shown as a ratio to the user.
+  function getOdds(c, profile) {
+    switch (profile) {
+      case 'homeless':    return c.totalUnits      > 0 ? c.maxSubscribers / c.totalUnits      : null;
+      case 'local':       return c.localUnits      > 0 ? c.maxLocalSubs   / c.localUnits      : null;
+      case 'combat':      return c.combatUnits     > 0 ? c.maxSubscribers / c.combatUnits     : null;
+      case 'reservist':   return c.reservistUnits  > 0 ? c.maxSubscribers / c.reservistUnits  : null;
+      case 'handicapped': return c.handicappedUnits > 0 ? c.handicappedSubs / c.handicappedUnits : null;
+    }
+    return null;
+  }
+
+  // ─── Score (0–100, higher = better city for you) ──────
+  function computeBounds(cities) {
+    const ratios     = cities.map(c => getOdds(c, _profile)).filter(v => v !== null);
+    const prices     = cities.map(c => c.totalUnits > 0 ? c.priceSum / c.totalUnits : 0).filter(Boolean);
+    const deliveries = cities.map(c => c.earliestDeliveryMs).filter(Boolean);
+    return {
+      minRatio: Math.min(...ratios),     maxRatio: Math.max(...ratios),
+      minPrice: Math.min(...prices),     maxPrice: Math.max(...prices),
+      minDeliv: Math.min(...deliveries), maxDeliv: Math.max(...deliveries),
+    };
+  }
+
+  function norm(val, min, max) {
+    if (val === null || max === min) return 0.5;
+    return Math.max(0, Math.min(1, (val - min) / (max - min)));
+  }
+
+  function calcScore(c, b) {
+    const ratio   = getOdds(c, _profile);
+    const price   = c.totalUnits > 0 ? c.priceSum / c.totalUnits : null;
+    const permitN = c.totalUnits > 0 ? c.permitUnits / c.totalUnits : 0;
+    const oddsN   = 1 - norm(ratio,        b.minRatio, b.maxRatio); // lower ratio  = better
+    const priceN  = 1 - norm(price,        b.minPrice, b.maxPrice); // lower price  = better
+    const delivN  = c.earliestDeliveryMs
+                  ? 1 - norm(c.earliestDeliveryMs, b.minDeliv, b.maxDeliv) // sooner = better
+                  : 0.3;                                                    // unknown = slight penalty
+    return Math.round(100 * (0.50 * oddsN + 0.25 * priceN + 0.20 * delivN + 0.05 * permitN));
+  }
+
+  // ─── Main render ──────────────────────────────────────
+  function render() {
+    if (!_projects?.length) return;
+    const { projs, cities, projectsByCity,
+            totalReservistUnits, totalCombatUnits } = getComputedData();
+    if (!cities.length) {
+      document.getElementById('content').innerHTML =
+        `<div class="loader" style="color:var(--muted)">אין פרויקטים התואמים לסינון שנבחר</div>`;
+      return;
+    }
+
+    const maxUnits   = Math.max(...cities.map(c => c.totalUnits));
+    const totalUnits = cities.reduce((s, c) => s + c.totalUnits, 0);
+
+    // Registration window
+    const start = _projects[0]?.ApplicationStartDate?.slice(0, 10);
+    const end   = _projects[0]?.ApplicationEndDate?.slice(0, 10);
+    document.getElementById('subtitle').textContent =
+      (start && end) ? `תקופת הרשמה: ${fmtDate(start)} — ${fmtDate(end)}` : 'פתוח להרשמה';
+
+    // Stats
+    const si = (key) => `<span class="stat-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${P[key]}</svg></span>`;
+    const totalRegistrations = cities.reduce((s, c) => s + c.maxSubscribers, 0);
+
+    // Profile-specific unit allocation for the units stat card
+    const profileUnitMap = {
+      homeless:    { units: totalUnits,                                                      lbl: 'יחידות דיור',       sub: null },
+      local:       { units: cities.reduce((s,c) => s + c.localUnits,        0), lbl: 'יח"ד לבני מקום',   sub: `מתוך ${totalUnits.toLocaleString('he-IL')} בהגרלה` },
+      combat:      { units: cities.reduce((s,c) => s + c.combatUnits,       0), lbl: 'יח"ד ללוחמים',     sub: `מתוך ${totalUnits.toLocaleString('he-IL')} בהגרלה` },
+      reservist:   { units: cities.reduce((s,c) => s + c.reservistUnits,    0), lbl: 'יח"ד למילואים',    sub: `מתוך ${totalUnits.toLocaleString('he-IL')} בהגרלה` },
+      handicapped: { units: cities.reduce((s,c) => s + c.handicappedUnits,  0), lbl: 'יח"ד לנכים',       sub: `מתוך ${totalUnits.toLocaleString('he-IL')} בהגרלה` },
+    };
+    const pu = profileUnitMap[_profile] || profileUnitMap.homeless;
+
+    const statData = [
+      { icon: 'pin',      val: cities.length, lbl: 'ערים פתוחות' },
+      { icon: 'grid',     val: pu.units,      lbl: pu.lbl,  sub: pu.sub },
+      { icon: 'list',     val: projs.length,                         lbl: 'הגרלות פתוחות' },
+      { icon: 'barchart', val: Math.round(totalUnits/cities.length), lbl: 'ממוצע יח"ד לעיר' },
+      { icon: 'users',    val: totalRegistrations,                   lbl: 'סה"כ נרשמים' },
+      { icon: 'star',     val: totalReservistUnits,                  lbl: 'יח"ד מילואים' },
+      { icon: 'shield',   val: totalCombatUnits,                     lbl: 'יח"ד לוחמים' },
+    ];
+    document.getElementById('stats').innerHTML = statData.map((s, i) => `
+      <div class="stat" style="position:relative;animation:fadeUp 0.4s ${0.05+i*0.07}s cubic-bezier(.22,1,.36,1) both">
+        ${si(s.icon)}<div class="val" data-count="${s.val}">0</div>
+        <div class="lbl">${s.lbl}</div>
+        ${s.sub ? `<div class="lbl-sub">${s.sub}</div>` : ''}
+      </div>`).join('');
+    document.querySelectorAll('#stats .val[data-count]').forEach(el =>
+      animateCount(el, +el.dataset.count));
+
+    // Section label (sort + profile aware)
+    const sortLabel = SORT_LABELS[_sortKey] || _sortKey;
+    const dirLabel  = _sortDir === 'desc' ? '↓' : '↑';
+    document.getElementById('sectionLabel').textContent =
+      `ערים — ${sortLabel} ${dirLabel} | פרופיל: ${PROFILE_LABELS[_profile]}`;
+
+    // Sort and render rows (clear stale drill-down data first)
+    _cityProjects.clear();
+    // Re-validate selection against current city list (cities may have changed due to filter)
+    const validNames = new Set(cities.map(c => c.name));
+    _selectedCities.forEach(n => { if (!validNames.has(n)) _selectedCities.delete(n); });
+    const display = sortedCities(cities);
+    const rows    = display.map((c, i) => renderRow(c, i + 1, maxUnits, projectsByCity[c.name] || [])).join('');
+
+    document.getElementById('content').innerHTML = `
+      <table>
+        <thead><tr>
+          <th class="no-sort" style="text-align:center">#</th>
+          ${thSort('name',        `${ico('pin')}עיר`)}
+          ${thSort('units',       `${ico('grid')}יחידות דיור`)}
+          ${thSort('subs',        `${ico('users')}נרשמים (מקס׳)`)}
+          ${thSort('competition', `${ico('zap')}תחרותיות`)}
+          ${thSort('permit',      `${ico('shield')}היתר בנייה`)}
+          ${thSort('price',       `${ico('price')}מחיר למ"ר`)}
+          ${thSort('delivery',    `${ico('cal')}מועד מסירה`)}
+          ${thSort('score',       `${ico('award')}ציון`)}
+          <th class="no-sort" style="width:36px" title="בחר עד 3 ערים להשוואת סיכויים"></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+
+    document.getElementById('ts').textContent = `עודכן: ${new Date().toLocaleString('he-IL')}`;
+    refreshSelectUI();
+
+    // Animate score count-ups after rows are painted
+    requestAnimationFrame(() =>
+      document.querySelectorAll('.score-num[data-count]').forEach((el, i) =>
+        setTimeout(() => animateCount(el, +el.dataset.count, 600), i * 40)));
+  }
+
+  // Returns the profile-specific unit count for a city object
+  function profileUnitsForCity(c) {
+    switch (_profile) {
+      case 'local':       return c.localUnits      || 0;
+      case 'combat':      return c.combatUnits      || 0;
+      case 'reservist':   return c.reservistUnits   || 0;
+      case 'handicapped': return c.handicappedUnits || 0;
+      default:            return c.totalUnits       || 0;
+    }
+  }
+
+  // ─── Row ──────────────────────────────────────────────
+  function rankBadge(rank) {
+    if (rank === 1) return `<span class="medal medal-gold">1</span>`;
+    if (rank === 2) return `<span class="medal medal-silver">2</span>`;
+    if (rank === 3) return `<span class="medal medal-bronze">3</span>`;
+    return `<span class="rank-num">${rank}</span>`;
+  }
+
+  function renderRow(c, rank, maxUnits, cityProjects = []) {
+    const barPct     = (c.totalUnits / maxUnits * 100).toFixed(1);
+    const profUnits  = profileUnitsForCity(c);
+    // For homeless the whole bar stays solid blue (no dedicated slice)
+    const profFrac   = (_profile === 'homeless' || c.totalUnits === 0)
+                       ? 0
+                       : Math.min(1, profUnits / c.totalUnits);
+    const pPct       = (profFrac * 100).toFixed(1);        // amber — dedicated to profile
+    const oPct       = ((1 - profFrac) * 100).toFixed(1);  // blue  — general pool
+    const delay   = (Math.min(rank - 1, 12) * 0.04).toFixed(2);
+    const id      = `r${rank}`;
+    _cityProjects.set(id, cityProjects);   // stored here, rendered lazily in toggleCity
+    return `
+      <tr class="city-row" id="row-${id}"
+          style="animation:rowIn 0.35s ${delay}s cubic-bezier(.22,1,.36,1) both"
+          onclick="toggleCity('${id}')">
+        <td class="td-rank">${rankBadge(rank)}</td>
+        <td>
+          <div class="city-row-inner">
+            <div>
+              <div class="city-name">${c.name}</div>
+              <div class="proj-count">${c.count} פרויקט${c.count !== 1 ? 'ים' : ''}</div>
+            </div>
+            <i class="chevron" id="chevron-${id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></i>
+          </div>
+        </td>
+        <td class="units-cell">
+          <div class="units-row">
+            ${_profile === 'homeless'
+              ? `<span class="units-num">${c.totalUnits.toLocaleString('he-IL')}</span>`
+              : `<div>
+                   <div class="units-num" style="color:#f59e0b">${profUnits.toLocaleString('he-IL')}</div>
+                   <div class="units-sub">מ-${c.totalUnits.toLocaleString('he-IL')}</div>
+                 </div>`
+            }
+            <div class="bar-track">
+              <div class="bar-fill" style="width:${barPct}%">
+                <div class="bar-seg-p" style="width:${pPct}%"></div>
+                <div class="bar-seg-o" style="width:${oPct}%"></div>
+              </div>
+            </div>
+          </div>
+        </td>
+        <td class="subs-num">${c.maxSubscribers.toLocaleString('he-IL')}</td>
+        ${renderCompCell(c)}
+        ${renderPermitCell(c)}
+        ${renderPriceCell(c)}
+        ${renderDeliveryCell(c)}
+        ${renderScoreCell(c._score)}
+        <td style="text-align:center">
+          <button class="select-btn${_selectedCities.has(c.name) ? ' selected' : ''}"
+                  data-city="${c.name.replace(/"/g,'&quot;')}"
+                  title="בחר עיר לחישוב סיכויים"
+                  ${!_selectedCities.has(c.name) && _selectedCities.size >= 3 ? 'disabled' : ''}
+                  onclick="toggleCitySelect('${c.name.replace(/'/g,"\\'")}', event)">
+            ${_selectedCities.has(c.name) ? '✓' : '+'}
+          </button>
+        </td>
+      </tr>
+      <tr class="detail-row" id="detail-${id}">
+        <td colspan="9">
+          <div class="city-detail">
+            <div class="detail-inner"></div>
+          </div>
+        </td>
+      </tr>`;
+  }
+
+  // ─── Competition cell ─────────────────────────────────
+  function renderCompCell(c) {
+    if (_profile === 'combat' || _profile === 'reservist') {
+      const units = (_profile === 'combat' ? c.combatUnits : c.reservistUnits).toLocaleString('he-IL');
+      return `
+        <td class="comp-cell">
+          <div><span class="badge badge-reserved">${units} יחידות ייעודיות</span></div>
+          <div class="ratio-text">נתוני תחרות טרם זמינים</div>
+        </td>`;
+    }
+    const ratio = getOdds(c, _profile);
+    if (ratio === null) return `<td class="comp-cell"><span class="ratio-text">לא רלוונטי</span></td>`;
+    let badge, cls;
+    if      (ratio < 25)  { badge = 'תחרות נמוכה';      cls = 'badge-easy'; }
+    else if (ratio < 60)  { badge = 'תחרות בינונית';    cls = 'badge-med'; }
+    else if (ratio < 100) { badge = 'תחרות גבוהה';      cls = 'badge-hard'; }
+    else                  { badge = 'תחרות גבוהה מאוד';  cls = 'badge-vhard'; }
+    const lbl = _profile === 'local'       ? 'מקומיים ליחידה ייעודית' :
+                _profile === 'handicapped' ? 'נכים ליחידה ייעודית'    : 'מתמודדים ליחידה';
+    return `
+      <td class="comp-cell">
+        <div><span class="badge ${cls}">${badge}</span></div>
+        <div class="ratio-text">${Math.round(ratio)} ${lbl}</div>
+      </td>`;
+  }
+
+  // ─── Permit cell ──────────────────────────────────────
+  function renderPermitCell(c) {
+    const pct = c.totalUnits > 0 ? c.permitUnits / c.totalUnits : 0;
+    let badge, cls, sub;
+    if      (pct === 0) { badge = 'ללא היתר';  cls = 'badge-permit-none'; sub = 'טרם הוגשה בקשה'; }
+    else if (pct <  1)  { badge = 'היתר חלקי'; cls = 'badge-permit-cond'; sub = `${c.permitUnits} מתוך ${c.totalUnits} יח"ד`; }
+    else                { badge = 'היתר מלא';  cls = 'badge-permit-full'; sub = 'כל היחידות'; }
+    return `
+      <td class="permit-cell">
+        <div><span class="badge ${cls}">${badge}</span></div>
+        <div class="permit-sub">${sub}</div>
+      </td>`;
+  }
+
+  // ─── Price cell ───────────────────────────────────────
+  function renderPriceCell(c) {
+    if (!c.priceSum || !c.totalUnits)
+      return `<td class="price-cell"><div class="price-sub">לא ידוע</div></td>`;
+    const avg = Math.round(c.priceSum / c.totalUnits);
+    const cls = avg < 10000 ? 'price-cheap' : avg < 15000 ? 'price-mid' : 'price-exp';
+    return `
+      <td class="price-cell">
+        <div class="price-val ${cls}">₪${avg.toLocaleString('he-IL')}</div>
+        <div class="price-sub">ממוצע למ"ר</div>
+      </td>`;
+  }
+
+  // ─── Delivery cell ────────────────────────────────────
+  function renderDeliveryCell(c) {
+    if (!c.earliestDeliveryMs)
+      return `<td class="delivery-cell"><div class="delivery-none">לא ידוע</div></td>`;
+    const months  = Math.round((c.earliestDeliveryMs - NOW_MS) / MS_PER_MO);
+    const d       = new Date(c.earliestDeliveryMs);
+    const dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    const cls     = months < 18 ? 'delivery-soon' : months < 36 ? 'delivery-mid' : 'delivery-late';
+    const sub     = months <= 0 ? 'עבר המועד' : `~${months} חודשים`;
+    return `
+      <td class="delivery-cell">
+        <div class="delivery-val ${cls}">${dateStr}</div>
+        <div class="delivery-sub">${sub}</div>
+      </td>`;
+  }
+
+  // ─── Score cell ───────────────────────────────────────
+  function renderScoreCell(score) {
+    const cls   = score >= 65 ? 'score-high' : score >= 40 ? 'score-mid' : 'score-low';
+    const color = score >= 65 ? '#4ade80'    : score >= 40 ? '#fbbf24'   : '#f87171';
+    return `
+      <td class="score-cell">
+        <div class="score-num ${cls}" data-count="${score}">0</div>
+        <div class="score-bar-track">
+          <div class="score-bar-fill" style="width:${score}%;background:${color}"></div>
+        </div>
+      </td>`;
+  }
+
+  // ─── City comparison ─────────────────────────────────
+  let _selectedCities = new Set();
+
+  function toggleCitySelect(name, e) {
+    e.stopPropagation();
+    if (_selectedCities.has(name)) {
+      _selectedCities.delete(name);
+    } else {
+      if (_selectedCities.size >= 3) return;
+      _selectedCities.add(name);
+    }
+    refreshSelectUI();
+  }
+
+  function refreshSelectUI() {
+    const count = _selectedCities.size;
+    // Compare button visibility + label
+    const btn = document.getElementById('compareBtn');
+    if (btn) {
+      btn.classList.toggle('visible', count > 0);
+      btn.textContent = count > 0 ? `חשב סיכויים (${count})` : 'חשב סיכויים';
+    }
+    // Update each row's button state
+    document.querySelectorAll('.select-btn').forEach(b => {
+      const name = b.dataset.city;
+      const sel  = _selectedCities.has(name);
+      b.classList.toggle('selected', sel);
+      b.textContent = sel ? '✓' : '+';
+      b.disabled = !sel && count >= 3;
+      b.closest('tr')?.classList.toggle('city-selected', sel);
+    });
+  }
+
+  // Win-probability helpers
+  // Priority order per the site's cascading lottery rules:
+  // combat → reservist → local → general (homeless)
+  const CASCADE_ORDER = ['combat', 'reservist', 'local', 'homeless'];
+  const CASCADE_LABELS = {
+    combat:    'לוחם מילואים — קדימות ראשונה',
+    reservist: 'מילואים עורפי — קדימות שנייה',
+    local:     'בן מקום — קדימות שלישית',
+    homeless:  'חסר דיור (כללי) — קדימות אחרונה',
+  };
+
+  function getProjectWinProbForCat(p, cat) {
+    let units, subs;
+    switch (cat) {
+      case 'combat':      units = p.HU_CombatReservist_L || 0;       subs = p.TotalSubscribers || 0;            break;
+      case 'reservist':   units = p.HU_Reservists_L || 0;            subs = p.TotalSubscribers || 0;            break;
+      case 'local':       units = p.LocalHousing || 0;               subs = p.TotalLocalSubscribers || 0;       break;
+      case 'handicapped': units = p.HousingUnitsForHandicapped || 0;  subs = p.TotalHandicappedSubscribers || 0; break;
+      default:            units = p.TargetHousingUnits || 0;          subs = p.TotalSubscribers || 0;
+    }
+    if (!subs || !units) return 0;
+    return Math.min(1, units / subs);
+  }
+
+  // Cascading probability for one project across multiple eligibility stages
+  function calcProjectCascadeProb(p, categories) {
+    let remainProb = 1, winProb = 0;
+    for (const cat of categories) {
+      const p_win = getProjectWinProbForCat(p, cat);
+      winProb   += remainProb * p_win;
+      remainProb *= (1 - p_win);
+      if (remainProb < 1e-6) break;
+    }
+    return winProb;
+  }
+
+  // Open modal — build eligibility checkboxes then calculate
+  function openCompare() {
+    if (!_selectedCities.size) return;
+
+    // Determine default checked categories based on current profile
+    const primary = _profile === 'handicapped' ? 'handicapped' : _profile;
+    const defaultChecked = new Set([primary === 'homeless' ? 'homeless' : primary]);
+    if (primary === 'homeless') defaultChecked.add('homeless');
+
+    // Build eligibility section (handicapped is a separate track, no cascade)
+    // חסר דיור is always the final fallback — not shown as a checkbox
+    const OPTIONAL_CATS = [
+      { key: 'combat',    label: 'לוחם מילואים' },
+      { key: 'reservist', label: 'מילואים עורפי' },
+      { key: 'local',     label: 'בן מקום' },
+    ];
+
+    let eligHtml = `<div class="elig-section">
+      <span class="elig-title">זכאויות נוספות:</span>
+      <div class="elig-pills">`;
+
+    if (primary !== 'handicapped') {
+      for (const cat of OPTIONAL_CATS) {
+        const checked = cat.key === primary;
+        eligHtml += `
+          <label class="elig-pill">
+            <input type="checkbox" data-cat="${cat.key}" ${checked ? 'checked' : ''}
+                   onchange="updateWinResults()">
+            <span>${cat.label}</span>
+          </label>`;
+      }
+    }
+
+    eligHtml += `</div>
+      <span class="elig-always">✓ חסר דיור — תמיד כלול</span>
+    </div>
+    <div id="winResults"></div>`;
+
+    document.getElementById('compareContent').innerHTML = eligHtml;
+    updateWinResults();
+    document.getElementById('compareModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Called on checkbox change and on modal open
+  function updateWinResults() {
+    const { projectsByCity } = getComputedData();
+
+    // Build cascading category list — חסר דיור always appended as final fallback
+    const categories = (() => {
+      const checkboxes = [...document.querySelectorAll('#compareContent input[data-cat]')];
+      const checked = new Set(checkboxes.filter(c => c.checked).map(c => c.dataset.cat));
+      const optional = ['combat', 'reservist', 'local'].filter(k => checked.has(k));
+      return _profile === 'handicapped' ? ['handicapped'] : [...optional, 'homeless'];
+    })();
+
+    const hasProxy = categories.some(c => c === 'combat' || c === 'reservist');
+    // Always render the warning at fixed height — visibility:hidden keeps layout stable
+    let html = `<div class="win-proxy-warn" style="${hasProxy ? '' : 'visibility:hidden'}">⚠ נתוני מתמודדים ייעודיים למילואים טרם זמינים — שלב זה מחושב כפרוקסי: סך הנרשמים ÷ יחידות ייעודיות.</div>`;
+
+    let combinedLoseProb = 1;
+    let cityCardsHtml    = '';
+
+    for (const name of _selectedCities) {
+      const projects   = projectsByCity[name] || [];
+      let cityLoseProb = 1;
+      const projChips  = [];
+
+      for (const p of projects) {
+        const projWin = calcProjectCascadeProb(p, categories);
+        cityLoseProb *= (1 - projWin);
+        if (projWin > 0.001) {
+          const hood = p.NeighborhoodName || p.ProjectName || '';
+          // Build readable breakdown per stage
+          let parts = [];
+          let rem = 1;
+          for (const cat of categories) {
+            const pw = getProjectWinProbForCat(p, cat);
+            if (pw > 0) {
+              const contrib = rem * pw;
+              const lbl = cat === 'local' ? `מקומיים` : cat === 'combat' ? `לוחמים` : cat === 'reservist' ? `מילואים` : cat === 'handicapped' ? `נכים` : `כללי`;
+              const rawU = cat==='local' ? p.LocalHousing : cat==='combat' ? p.HU_CombatReservist_L : cat==='reservist' ? p.HU_Reservists_L : cat==='handicapped' ? p.HousingUnitsForHandicapped : p.TargetHousingUnits;
+              const rawS = cat==='local' ? p.TotalLocalSubscribers : cat==='handicapped' ? p.TotalHandicappedSubscribers : p.TotalSubscribers;
+              parts.push(`${rawU}/${rawS} ${lbl}`);
+              rem *= (1 - pw);
+            }
+          }
+          projChips.push(`<span class="win-proj-chip" title="${parts.join(' → ')}">${hood}: ${(projWin*100).toFixed(1)}% (${parts.join(' → ')})</span>`);
+        }
+      }
+
+      const cityWinProb = 1 - cityLoseProb;
+      combinedLoseProb *= cityLoseProb;
+      const pct   = (cityWinProb * 100).toFixed(1);
+      const color = cityWinProb > 0.5 ? '#4ade80' : cityWinProb > 0.2 ? '#fbbf24' : '#f87171';
+
+      cityCardsHtml += `
+        <div class="win-city-block">
+          <div class="win-city-header">
+            <div>
+              <div class="win-city-name">${name}</div>
+              <div class="win-city-count">${projects.length} פרויקטים</div>
+            </div>
+            <span class="win-pct" data-pct="${pct}" style="color:${color}">0%</span>
+          </div>
+          <div class="win-bar-track">
+            <div class="win-bar-fill" data-w="${pct}%" style="width:0;background:${color}"></div>
+          </div>
+          <div class="win-proj-list">${projChips.join('')}</div>
+        </div>`;
+    }
+
+    // Cities side by side in a flex row
+    html += `<div class="win-cities-row">${cityCardsHtml}</div>`;
+
+    if (_selectedCities.size > 1) {
+      const combined = (1 - combinedLoseProb) * 100;
+      const cc = combined > 50 ? '#4ade80' : combined > 20 ? '#fbbf24' : '#f87171';
+      html += `
+        <div class="win-combined-card">
+          <div class="win-combined-label">סיכוי לזכות<br>בלפחות עיר אחת</div>
+          <span class="win-combined-pct" data-pct="${combined.toFixed(1)}" style="color:${cc}">0%</span>
+          <div class="win-combined-bar">
+            <div class="win-bar-fill" data-w="${combined.toFixed(1)}%" style="width:0;background:${cc}"></div>
+          </div>
+        </div>`;
+    }
+
+    html += `
+      <div class="win-formula">
+        <strong style="color:#94a3b8">נוסחה (מדרג):</strong>
+        לכל פרויקט — מתחיל בקטגוריה בעלת עדיפות גבוהה; אם לא זכה עובר לבאה.
+        סיכוי לעיר = 1 – ∏(1 – p<sub>i</sub>).
+        סיכוי כולל = 1 – ∏(1 – P<sub>עיר</sub>).
+      </div>`;
+
+    const el = document.getElementById('winResults');
+    if (!el) return;
+
+    // Capture current state before replacing HTML so we can animate from it
+    const prevWidths = [...el.querySelectorAll('[data-w]')].map(b => b.style.width || '0%');
+    const prevPcts   = [...el.querySelectorAll('[data-pct]')].map(s => parseFloat(s.textContent) || 0);
+
+    el.innerHTML = html;
+
+    // Set bars to their previous widths, then let CSS transition animate to new widths
+    el.querySelectorAll('[data-w]').forEach((bar, i) => {
+      bar.style.width = prevWidths[i] || '0%';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        bar.style.width = bar.dataset.w;
+      }));
+    });
+
+    // Count numbers from previous displayed value to new value
+    el.querySelectorAll('[data-pct]').forEach((span, i) => {
+      animatePct(span, prevPcts[i] ?? 0, parseFloat(span.dataset.pct));
+    });
+  }
+
+  function closeCompare() {
+    document.getElementById('compareModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function closeCompareOutside(e) {
+    if (e.target === document.getElementById('compareModal')) closeCompare();
+  }
+
+  // ─── City row expand / collapse ──────────────────────
+  function toggleCity(id) {
+    const detail  = document.getElementById('detail-' + id);
+    const chevron = document.getElementById('chevron-' + id);
+    if (!detail) return;
+    const open = detail.classList.toggle('open');
+    if (chevron) chevron.style.transform = open ? 'rotate(180deg)' : '';
+    if (open) {
+      const inner = detail.querySelector('.detail-inner');
+      if (!inner.innerHTML)
+        inner.innerHTML = renderProjectDetail(_cityProjects.get(id) || []);
+    }
+  }
+
+  function renderProjectDetail(cityProjects) {
+    const sorted = [...cityProjects].sort((a, b) =>
+      (b.TargetHousingUnits || 0) - (a.TargetHousingUnits || 0));
+
+    const rows = sorted.map(p => {
+      const ratio    = Math.round((p.TotalSubscribers || 0) / (p.TargetHousingUnits || 1));
+      const price    = p.PricePerUnit ? `₪${p.PricePerUnit.toLocaleString('he-IL')}` : '—';
+      const delivery = p.LotDeliveryDate ? fmtDate(p.LotDeliveryDate.slice(0, 10)) : 'לא ידוע';
+      const relig    = p.IsReligious ? `<span class="relig-tag">דתי</span>` : '';
+      const winMs    = new Date(p.ContractorWinLotDate).getTime();
+      const ageMo    = Math.round((Date.now() - winMs) / (30.44 * 24 * 3600 * 1000));
+      const age      = ageMo < 12 ? `${ageMo} חו'` : `${(ageMo / 12).toFixed(1)} ש'`;
+      return `
+        <tr>
+          <td class="pd-hood">${relig}${p.NeighborhoodName || p.ProjectName}</td>
+          <td class="pd-contractor" title="${p.ContractorDescription}">${p.ContractorDescription}</td>
+          <td class="pd-units">${p.TargetHousingUnits}</td>
+          <td>${price}/מ"ר</td>
+          <td class="pd-ratio">${ratio}:1</td>
+          <td>${delivery}</td>
+          <td class="pd-age">${age}</td>
+        <td><a class="lottery-link" href="https://dira.moch.gov.il/${p.ProjectNumber}/${p.LotteryNumber}/ProjectInfo" target="_blank">הירשם ›</a></td>
+        </tr>`;
+    }).join('');
+
+    return `
+      <table class="project-list">
+        <thead><tr>
+          <th>שכונה / מגרש</th><th>קבלן</th><th>יח"ד בהגרלה</th>
+          <th>מחיר למ"ר</th><th>תחרות</th><th>מסירה</th><th>גיל פרויקט</th><th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  // ─── Percentage count-up (for win modal) ─────────────
+  function animatePct(el, from, to, ms = 500) {
+    const start = performance.now();
+    const step  = now => {
+      const p    = Math.min((now - start) / ms, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = (from + (to - from) * ease).toFixed(1) + '%';
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = to.toFixed(1) + '%';
+    };
+    requestAnimationFrame(step);
+  }
+
+  // ─── Count-up animation ───────────────────────────────
+  function animateCount(el, target, ms = 750) {
+    const start = performance.now();
+    const fmt   = n => Math.round(n).toLocaleString('he-IL');
+    const step  = now => {
+      const p = Math.min((now - start) / ms, 1);
+      const ease = 1 - Math.pow(1 - p, 3);   // ease-out cubic
+      el.textContent = fmt(ease * target);
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = fmt(target);
+    };
+    requestAnimationFrame(step);
+  }
+
+  // ─── Help modal ───────────────────────────────────────
+  function openHelp() {
+    document.getElementById('helpModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeHelp() {
+    document.getElementById('helpModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function closeHelpOutside(e) {
+    if (e.target === document.getElementById('helpModal')) closeHelp();
+  }
+
+  // ─── Utilities ────────────────────────────────────────
+  function fmtDate(iso) {
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  loadData();
+</script>
+</body>
+</html>
