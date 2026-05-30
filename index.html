@@ -936,8 +936,9 @@
     return `<span class="th-icon"><svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${P[key]}</svg></span>`;
   }
 
-  let _projects = null;
-  let _profile  = 'homeless';
+  let _projects  = null;
+  let _profile   = 'homeless';
+  let _fetchedAt = null;   // timestamp from server: when data was actually scraped
   let _sortKey  = 'score';
   let _sortDir  = 'desc';
   let _religious = null;   // null = all, true = religious only, false = secular only
@@ -1066,7 +1067,8 @@
     try {
       const res = await fetch(force ? '/api/refresh' : '/api/data', { cache: 'no-store' });
       if (!res.ok) throw new Error(`שגיאת שרת ${res.status}`);
-      _projects = await res.json();
+      _projects  = await res.json();
+      _fetchedAt = res.headers.get('X-Data-Fetched-At') || null;
       invalidateAllCaches();
       render();
     } catch (e) {
@@ -1259,7 +1261,8 @@
         <tbody>${rows}</tbody>
       </table>`;
 
-    document.getElementById('ts').textContent = `עודכן: ${new Date().toLocaleString('he-IL')}`;
+    document.getElementById('ts').textContent =
+      `נתונים נאספו: ${_fetchedAt || new Date().toLocaleString('he-IL')}`;
     refreshSelectUI();
 
     // Animate score count-ups after rows are painted

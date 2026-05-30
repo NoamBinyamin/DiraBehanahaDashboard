@@ -27,6 +27,7 @@ INDEX_FILE = os.path.join(BASE_DIR, "index.html")
 
 _data        = None
 _index_cache = None   # index.html served from memory after first read
+_fetched_at  = None   # when the data was last fetched/loaded (ISO string)
 
 
 async def _fetch_live():
@@ -67,7 +68,7 @@ async def _fetch_live():
 
 
 def get_data(force=False):
-    global _data
+    global _data, _fetched_at
     if not force and _data:
         return _data
 
@@ -80,7 +81,10 @@ def get_data(force=False):
             _data = None
             os.remove(CACHE_FILE)
         else:
-            log(f"Loaded {len(_data)} of {expected} projects from cache")
+            # Use the file's last-modified time as the data timestamp
+            mtime = os.path.getmtime(CACHE_FILE)
+            _fetched_at = datetime.fromtimestamp(mtime).strftime("%d/%m/%Y %H:%M")
+            log(f"Loaded {len(_data)} of {expected} projects from cache (data from {_fetched_at})")
             return _data
 
     log("No valid cache — fetching live data from dira.moch.gov.il ...")
@@ -91,9 +95,10 @@ def get_data(force=False):
             log("Fetch timed out after 120 seconds — try again later")
             return []
     _data = asyncio.run(_fetch_with_timeout())
+    _fetched_at = datetime.now().strftime("%d/%m/%Y %H:%M")
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
         json.dump(_data, f, ensure_ascii=False)
-    log(f"Cache saved ({len(_data)} projects)")
+    log(f"Cache saved ({len(_data)} projects, fetched at {_fetched_at})")
     return _data
 
 
@@ -141,6 +146,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(raw)))
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+        if _fetched_at:
+            self.send_header("X-Data-Fetched-At", _fetched_at)
         self.end_headers()
         self.wfile.write(raw)
 
