@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: dira-dashboard
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python -m playwright install chromium --with-deps
+    startCommand: python server.py
+    envVars:
+      - key: RENDER
+        value: "true"

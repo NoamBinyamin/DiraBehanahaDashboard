@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.pyo
+dira_page.html
+dira_projects.json
+.claude/

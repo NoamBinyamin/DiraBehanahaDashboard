@@ -10,6 +10,11 @@ from playwright.async_api import async_playwright
 
 sys.stdout.reconfigure(encoding="utf-8")
 
+# On Render the PORT env-var is set automatically; RENDER=true signals production mode.
+IS_PROD = bool(os.environ.get("RENDER"))
+PORT    = int(os.environ.get("PORT", 8080))
+HOST    = "0.0.0.0" if IS_PROD else "localhost"
+
 def log(msg, indent=0):
     ts = datetime.now().strftime("%H:%M:%S")
     prefix = "  " * indent
@@ -104,8 +109,12 @@ class Handler(BaseHTTPRequestHandler):
             log("Dashboard requested data")
             self._send_json(get_data())
         elif path == "/api/refresh":
-            log("Manual refresh triggered — re-fetching live data ...")
-            self._send_json(get_data(force=True))
+            if IS_PROD:
+                log("Refresh requested — not available in production (site is geo-restricted to Israel)")
+                self._send_json(get_data())   # return cached data unchanged
+            else:
+                log("Manual refresh triggered — re-fetching live data ...")
+                self._send_json(get_data(force=True))
         else:
             self.send_error(404)
 
@@ -137,15 +146,15 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    PORT = 8080
     print(f"\n{'='*42}")
-    print(f"  Dira Dashboard  —  http://localhost:{PORT}")
+    print(f"  Dira Dashboard  —  {'Render (production)' if IS_PROD else f'http://localhost:{PORT}'}")
     print(f"{'='*42}\n")
     get_data()
-    print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Server ready — http://localhost:{PORT}")
-    print("  Press Ctrl+C to stop.\n")
-    webbrowser.open(f"http://localhost:{PORT}")
+    print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Server ready on {HOST}:{PORT}")
+    if not IS_PROD:
+        print("  Press Ctrl+C to stop.\n")
+        webbrowser.open(f"http://localhost:{PORT}")
     try:
-        HTTPServer(("localhost", PORT), Handler).serve_forever()
+        HTTPServer((HOST, PORT), Handler).serve_forever()
     except KeyboardInterrupt:
         print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Server stopped.")

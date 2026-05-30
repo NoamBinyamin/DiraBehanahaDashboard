@@ -1115,6 +1115,11 @@
         if (!c.earliestDeliveryMs || ms < c.earliestDeliveryMs) c.earliestDeliveryMs = ms;
       }
     }
+    // General pool = what's left for the public after all priority stages
+    for (const c of Object.values(map)) {
+      c.generalUnits = Math.max(0,
+        c.totalUnits - c.handicappedUnits - c.reservistUnits - c.combatUnits - c.localUnits);
+    }
     return Object.values(map);
   }
 
@@ -1125,7 +1130,7 @@
   // but is not shown as a ratio to the user.
   function getOdds(c, profile) {
     switch (profile) {
-      case 'homeless':    return c.totalUnits      > 0 ? c.maxSubscribers / c.totalUnits      : null;
+      case 'homeless':    return c.generalUnits     > 0 ? c.maxSubscribers / c.generalUnits    : null;
       case 'local':       return c.localUnits      > 0 ? c.maxLocalSubs   / c.localUnits      : null;
       case 'combat':      return c.combatUnits     > 0 ? c.maxSubscribers / c.combatUnits     : null;
       case 'reservist':   return c.reservistUnits  > 0 ? c.maxSubscribers / c.reservistUnits  : null;
@@ -1189,7 +1194,7 @@
 
     // Profile-specific unit allocation for the units stat card
     const profileUnitMap = {
-      homeless:    { units: totalUnits,                                                      lbl: 'יחידות דיור',       sub: null },
+      homeless:    { units: cities.reduce((s,c) => s + (c.generalUnits || 0), 0),             lbl: 'יח"ד לציבור הכללי', sub: `מתוך ${totalUnits.toLocaleString('he-IL')} בהגרלה` },
       local:       { units: cities.reduce((s,c) => s + c.localUnits,        0), lbl: 'יח"ד לבני מקום',   sub: `מתוך ${totalUnits.toLocaleString('he-IL')} בהגרלה` },
       combat:      { units: cities.reduce((s,c) => s + c.combatUnits,       0), lbl: 'יח"ד ללוחמים',     sub: `מתוך ${totalUnits.toLocaleString('he-IL')} בהגרלה` },
       reservist:   { units: cities.reduce((s,c) => s + c.reservistUnits,    0), lbl: 'יח"ד למילואים',    sub: `מתוך ${totalUnits.toLocaleString('he-IL')} בהגרלה` },
@@ -1258,11 +1263,11 @@
   // Returns the profile-specific unit count for a city object
   function profileUnitsForCity(c) {
     switch (_profile) {
-      case 'local':       return c.localUnits      || 0;
-      case 'combat':      return c.combatUnits      || 0;
-      case 'reservist':   return c.reservistUnits   || 0;
-      case 'handicapped': return c.handicappedUnits || 0;
-      default:            return c.totalUnits       || 0;
+      case 'local':       return c.localUnits       || 0;
+      case 'combat':      return c.combatUnits       || 0;
+      case 'reservist':   return c.reservistUnits    || 0;
+      case 'handicapped': return c.handicappedUnits  || 0;
+      default:            return c.generalUnits      || 0;  // only the general pool remains
     }
   }
 
@@ -1277,10 +1282,7 @@
   function renderRow(c, rank, maxUnits, cityProjects = []) {
     const barPct     = (c.totalUnits / maxUnits * 100).toFixed(1);
     const profUnits  = profileUnitsForCity(c);
-    // For homeless the whole bar stays solid blue (no dedicated slice)
-    const profFrac   = (_profile === 'homeless' || c.totalUnits === 0)
-                       ? 0
-                       : Math.min(1, profUnits / c.totalUnits);
+    const profFrac   = c.totalUnits > 0 ? Math.min(1, profUnits / c.totalUnits) : 0;
     const pPct       = (profFrac * 100).toFixed(1);        // amber — dedicated to profile
     const oPct       = ((1 - profFrac) * 100).toFixed(1);  // blue  — general pool
     const delay   = (Math.min(rank - 1, 12) * 0.04).toFixed(2);
@@ -1475,7 +1477,15 @@
       case 'reservist':   units = p.HU_Reservists_L || 0;            subs = p.TotalSubscribers || 0;            break;
       case 'local':       units = p.LocalHousing || 0;               subs = p.TotalLocalSubscribers || 0;       break;
       case 'handicapped': units = p.HousingUnitsForHandicapped || 0;  subs = p.TotalHandicappedSubscribers || 0; break;
-      default:            units = p.TargetHousingUnits || 0;          subs = p.TotalSubscribers || 0;
+      default: {
+        // General public only competes for units left after all priority stages
+        const dedicated = (p.HousingUnitsForHandicapped || 0)
+          + (p.HU_Reservists_L || 0)
+          + (p.HU_CombatReservist_L || 0)
+          + (p.LocalHousing || 0);
+        units = Math.max(0, (p.TargetHousingUnits || 0) - dedicated);
+        subs  = p.TotalSubscribers || 0;
+      }
     }
     if (!subs || !units) return 0;
     return Math.min(1, units / subs);
