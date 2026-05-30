@@ -559,7 +559,9 @@
     .modal-card::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
     /* ── Win probability modal ───────────────────────────── */
-    #compareModal .modal-card { max-width: 1100px; width: 92vw; padding: 32px 36px 28px; }
+    #compareModal { align-items: flex-start; padding-top: 5vh; }
+    #compareModal .modal-card { max-width: 1100px; width: 92vw; padding: 32px 36px 28px; min-height: 520px; }
+    #winResults { min-height: 280px; }
 
     /* Compact eligibility strip */
     .elig-section {
@@ -1590,7 +1592,7 @@
               rem *= (1 - pw);
             }
           }
-          projChips.push(`<span class="win-proj-chip" title="${parts.join(' → ')}">${hood}: ${(projWin*100).toFixed(1)}% (${parts.join(' → ')})</span>`);
+          projChips.push(`<span class="win-proj-chip" title="${parts.join(' → ')}">${hood}: ${(projWin*100).toFixed(1)}%</span>`);
         }
       }
 
